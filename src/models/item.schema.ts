@@ -5,10 +5,10 @@ export class Item {
   name: string;
   @prop({ options: true })
   description?: string;
-  @prop({ required: false })
-  toDoDate: Date;
-  @prop({ required: false })
-  endTime: Number;
+  @prop({ options: true })
+  toDoDate?: Date;
+  @prop({ options: true })
+  endTime?: Number;
   @prop({ default: false })
-  ifDone: boolean;
+  ifDone?: boolean;
 }

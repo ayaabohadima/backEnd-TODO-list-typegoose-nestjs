@@ -4,10 +4,9 @@ import { UserController } from './user.controller';
 import { TypegooseModule } from "nestjs-typegoose";
 import { User } from "../models/user.schema";
 import { Item } from "../models/item.schema";
+import { SharedModule } from '../shared/shared.module'
 @Module({
-  imports: [TypegooseModule.forFeature([User]),
-  TypegooseModule.forFeature([Item])],
-  providers: [UserService],
+  imports: [SharedModule],
   controllers: [UserController]
 })
 export class UserModule { }

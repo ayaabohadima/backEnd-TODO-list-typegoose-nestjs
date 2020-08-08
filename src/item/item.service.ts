@@ -3,6 +3,7 @@ import { Item } from "../models/item.schema";
 import { User } from "../models/user.schema";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { InjectModel } from "nestjs-typegoose";
+const ObjectId = require('mongoose').Types.ObjectId;
 import * as Joi from '@hapi/joi';
 import { UserService } from '../user/user.service';
 @Injectable()
@@ -13,29 +14,32 @@ export class ItemService {
         private UserService: UserService,
     ) { }
     async getItemByID(id): Promise<Item | null> {
-
+        if (!ObjectId.isValid(id)) throw new HttpException('not valid object id', HttpStatus.FORBIDDEN);
         const item = await this.itemModel.findOne({ _id: id });
-        if (!item)
-            new HttpException('not item', HttpStatus.BAD_REQUEST);
+        if (!item) {
+            throw new HttpException('no item ', HttpStatus.FORBIDDEN);
+        }
         return item;
     }
 
     async getUserItem(userID, itemID) {
         if (!await this.UserService.checkUserHaveItem(userID, itemID))
-            new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
+            throw new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
         return this.getItemByID(itemID);
     }
     async checkCeateItemData(createItemDto: {
         name: string;
         description?: string;
-        toDoDate: Date;
-        ifDone: boolean;
+        toDoDate?: Date;
+        ifDone?: boolean;
+        endTime?: Number;
     }): Promise<Boolean> {
         const shcema = Joi.object({
             name: Joi.string().required(),
             description: Joi.string().optional(),
-            ifDone: Joi.Boolean().optional(),
-            toDoDate: Joi.date().raw().required(),
+            ifDone: Joi.boolean().optional(),
+            toDoDate: Joi.date().raw().optional(),
+            endTime: Joi.number().optional()
         });
         const validate = shcema.validate(createItemDto);
         if (validate.error)
@@ -46,11 +50,13 @@ export class ItemService {
         name?: string;
         description?: string;
         toDoDate?: Date;
+        endTime?: Number;
     }): Promise<Boolean> {
         const shcema = Joi.object({
             name: Joi.string().optional(),
             description: Joi.string().optional(),
             toDoDate: Joi.date().raw().optional(),
+            endTime: Joi.number().optional()
         });
         const validate = shcema.validate(updateItemDto);
         if (validate.error)
@@ -61,12 +67,13 @@ export class ItemService {
     async create(createItemDto: {
         name: string;
         description?: string;
-        toDoDate: Date;
-        ifDone: boolean;
+        toDoDate?: Date;
+        ifDone?: boolean;
+        endTime?: Number;
     }, userID) {
         const user = await this.UserService.getUserByID(userID);
         if (!user)
-            new HttpException('Unauthorized access', HttpStatus.UNAUTHORIZED);
+            throw new HttpException('Unauthorized access', HttpStatus.UNAUTHORIZED);
 
         await this.checkCeateItemData(createItemDto);
         const createdItem = new this.itemModel(createItemDto);
@@ -76,7 +83,7 @@ export class ItemService {
     }
     async toggleIsDone(userID, itemID) {
         if (!await this.UserService.checkUserHaveItem(userID, itemID))
-            new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
+            throw new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
         const item = await this.getItemByID(itemID);
         await this.itemModel.updateOne({ _id: itemID }, { ifDone: item.ifDone ? false : true });
         return item.ifDone ? false : true;
@@ -85,9 +92,10 @@ export class ItemService {
         name?: string;
         description?: string;
         toDoDate?: Date;
+        endTime?: Number;
     }) {
         if (!await this.UserService.checkUserHaveItem(userID, itemID))
-            new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
+            throw new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
         const item = await this.getItemByID(itemID);
         await this.checkUpdateItemData(updateItemDto);
         if (updateItemDto.description)
@@ -96,6 +104,9 @@ export class ItemService {
             await this.itemModel.updateOne({ _id: itemID }, { name: updateItemDto.name });
         if (updateItemDto.toDoDate)
             await this.itemModel.updateOne({ _id: itemID }, { toDoDate: updateItemDto.toDoDate });
+        if (updateItemDto.endTime)
+            await this.itemModel.updateOne({ _id: itemID }, { endTime: updateItemDto.endTime });
+
     }
 
     async getUserAllItems(userId) {
@@ -136,7 +147,7 @@ export class ItemService {
         // const dateNow = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
         for (let i = 0; i < itemsIDs.length; i++) {
             var item = await this.getItemByID(itemsIDs[i]);
-            if (item.toDoDate == today)
+            if (!item.toDoDate || item.toDoDate == today)
                 items.push(item);
         }
         return items;
@@ -148,17 +159,21 @@ export class ItemService {
         const today = new Date();
         for (let i = 0; i < itemsIDs.length; i++) {
             const item = await this.getItemByID(itemsIDs[i]);
-            if (!item.ifDone && item.toDoDate == today)
+            if (!item.ifDone && (!item.toDoDate || item.toDoDate == today))
                 items.push(item);
         }
         return items;
     }
 
     async deleteItem(itemID, userID) {
+        const item = await this.getItemByID(itemID);
         if (!await this.UserService.checkUserHaveItem(userID, itemID))
-            new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
+            throw new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
         if (await this.UserService.deleteItemFromUser(userID, itemID))
-            await this.itemModel.findOneAndDelete({ _id: itemID });
+            if (await this.itemModel.findOneAndDelete({ _id: itemID }))
+                return true;
+            else throw new HttpException('this item not exist ', HttpStatus.UNAUTHORIZED);
+
     }
 
 }

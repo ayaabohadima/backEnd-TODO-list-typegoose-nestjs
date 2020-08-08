@@ -10,9 +10,12 @@ export class AuthController {
     constructor(private readonly userService: UserService, private readonly authService: AuthService) { }
 
     @Post('/sign-up')
-    async create(@Body() user: User): Promise<User> {
+    async create(@Body() user: User) {
         const createdUser = await this.userService.create(user);
-        if (createdUser) return createdUser;
+
+        if (!createdUser) throw new Error('user not found');
+        const token = await this.authService.signPayload({ _id: createdUser._id });
+        return { token };
     }
 
     @Post('/login')

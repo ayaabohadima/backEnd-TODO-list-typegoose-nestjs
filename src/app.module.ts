@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ItemModule } from './item/item.module';
+import { SharedModule } from './shared/shared.module';
 
 
 @Module({
@@ -18,6 +19,7 @@ import { ItemModule } from './item/item.module';
     AuthModule,
     UserModule,
     ItemModule,
+    SharedModule,
   ],
   controllers: [AppController],
   providers: [AppService],

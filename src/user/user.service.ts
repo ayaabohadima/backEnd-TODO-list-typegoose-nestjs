@@ -1,4 +1,5 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Item } from "../models/item.schema";
 import { User } from "../models/user.schema";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { InjectModel } from "nestjs-typegoose";
@@ -8,20 +9,24 @@ import * as bcrypt from 'bcrypt';
 @Injectable()
 export class UserService {
     constructor(
-        @InjectModel(User) private readonly userModel: ReturnModelType<typeof User>
+        @InjectModel(User) private readonly userModel: ReturnModelType<typeof User>,
+        @InjectModel(Item) private readonly itemModel: ReturnModelType<typeof Item>
     ) { }
+
     async getUserByID(userID): Promise<User | null> {
         const user = await this.userModel.findOne({ _id: userID });
         if (!user)
-            new HttpException('Unauthorized access', HttpStatus.UNAUTHORIZED);
+            throw new HttpException('Unauthorized access', HttpStatus.UNAUTHORIZED);
         return user;
     }
+
     async getUserByEmail(email): Promise<User | null> {
         const user = await this.userModel.findOne({ email: email });
         if (!user)
             return null;
         return user;
     }
+
     async checkCeateUserData(createUserDto: {
         userName: string;
         password: string;
@@ -39,19 +44,20 @@ export class UserService {
             throw new HttpException('"email" should not have acount', HttpStatus.FORBIDDEN,);
         return true;
     }
+
     async create(createUserDto: {
         userName: string;
         password: string;
         email: string;
-    }): Promise<User> {
+    }) {
         await this.checkCeateUserData(createUserDto);
         const salt = await bcrypt.genSalt(10);
         let hash = await bcrypt.hash(createUserDto.password, salt);
         createUserDto.password = hash;
         const createdUser = new this.userModel(createUserDto);
-        return await createdUser.save();
+        await createdUser.save();
+        return createdUser;
     }
-
 
     async findByLogin(loginDto: { email, password }): Promise<any> {
         const user = await this.userModel
@@ -66,9 +72,11 @@ export class UserService {
         throw new HttpException('password is not correct', HttpStatus.FORBIDDEN);
 
     }
+
     async findAll(): Promise<User[] | null> {
         return await this.userModel.find().exec();
     }
+
     async addItemToUser(itemId, userID) {
         const user = await this.getUserByID(userID);
         let items = user.items;
@@ -76,6 +84,7 @@ export class UserService {
         await this.userModel.updateOne({ _id: userID }, { items: items });
         return 1;
     }
+
     async checkUserHaveItem(userID, itemID): Promise<Boolean> {
         const user = await this.getUserByID(userID);
         for (let i = 0; i < user.items.length; i++)
@@ -84,6 +93,7 @@ export class UserService {
         return false;
 
     }
+
     async deleteItemFromUser(userID, itemID) {
         if (!await this.checkUserHaveItem(userID, itemID))
             throw new HttpException('you do not have this item', HttpStatus.FORBIDDEN);
@@ -96,13 +106,19 @@ export class UserService {
             }
         throw new HttpException('can not delete', HttpStatus.FORBIDDEN);
     }
+
     async getUserItem(userID) {
         const user = await this.getUserByID(userID);
         return user.items;
     }
-    // and need handle if no user 
-    // delete all user items
+
     async deleteUser(userID) {
+        const user = await this.getUserByID(userID);
+        if (!user)
+            throw new HttpException('Unauthorized access', HttpStatus.UNAUTHORIZED);
+        for (let i = 0; i < user.items.length; i++) {
+            await this.itemModel.findOneAndDelete({ _id: user.items[i] });
+        }
         await this.userModel.findOneAndDelete({ _id: userID });
     }
 

@@ -5,10 +5,10 @@ import { AuthController } from './auth.controller';
 import { TypegooseModule } from "nestjs-typegoose";
 import { User } from "../models/user.schema";
 import { JwtStrategy } from './jwt.strategy';
-
+import { SharedModule } from '../shared/shared.module'
 @Module({
-  imports: [TypegooseModule.forFeature([User])],
-  providers: [AuthService, JwtStrategy, UserService],
+  imports: [SharedModule],
+  providers: [AuthService, JwtStrategy],
   controllers: [AuthController]
 })
 export class AuthModule { }
