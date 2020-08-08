@@ -12,7 +12,8 @@ import { ItemBaseService } from './base-item.service';
 
 @Module({
     imports: [SharedModule,
-        TypegooseModule.forFeature([Item])],
+        TypegooseModule.forFeature([Item]),
+        TypegooseModule.forFeature([User])],
     providers: [ItemService, UserService, UserBaseService, ItemBaseService],
     controllers: [ItemController]
 })
