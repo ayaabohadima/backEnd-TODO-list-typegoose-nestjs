@@ -69,10 +69,17 @@ export class UserService {
     async findAll(): Promise<User[] | null> {
         return await this.userModel.find().exec();
     }
-    // should change to _id "token"
+    async addItemToUser(itemId, userID) {
+        const user = await this.getUserByID(userID);
+        let items = user.items;
+        items.push(itemId);
+        await this.userModel.updateOne({ _id: userID }, { items: items });
+        return 1;
+    }
     // and need handle if no user 
     // delete all user items
     async deleteUser(userID) {
         await this.userModel.findOneAndDelete({ _id: userID });
     }
+
 }

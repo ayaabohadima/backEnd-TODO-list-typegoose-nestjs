@@ -10,5 +10,5 @@ export class User {
   @prop({ required: true })
   email: string;
   @prop({ ref: Item })
-  Item?: [Ref<Item>];
+  items?: [Ref<Item>];
 }

@@ -1,12 +1,16 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { Item } from "../models/item.schema";
+import { User } from "../models/user.schema";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { InjectModel } from "nestjs-typegoose";
 import * as Joi from '@hapi/joi';
+import { UserService } from '../user/user.service';
 @Injectable()
 export class ItemService {
     constructor(
-        @InjectModel(Item) private readonly itemModel: ReturnModelType<typeof Item>
+        @InjectModel(Item) private readonly itemModel: ReturnModelType<typeof Item>,
+        @InjectModel(User) private readonly userModel: ReturnModelType<typeof User>,
+        private UserService: UserService,
     ) { }
     async getItemByID(id): Promise<Item | null> {
         const item = await this.itemModel.findOne({ _id: id });
@@ -15,34 +19,38 @@ export class ItemService {
         return item;
     }
 
-    async checkCeateUserData(createItemDto: {
-        userName: string;
-        password: string;
-        email: string;
+    async checkCeateItemData(createItemDto: {
+        name: string;
+        description?: string;
+        toDoDate: Date;
+        ifDone: boolean;
     }): Promise<Boolean> {
         const shcema = Joi.object({
-            email: Joi.string().trim().email().required(),
-            password: Joi.string().required(),
-            userName: Joi.string().required()
+            name: Joi.string().required(),
+            description: Joi.string().optional(),
+            ifDone: Joi.Boolean().optional(),
+            toDoDate: Joi.date().raw().required(),
         });
-        const validate = shcema.validate(createUserDto);
+        const validate = shcema.validate(createItemDto);
         if (validate.error)
             throw new HttpException(validate.error, HttpStatus.FORBIDDEN);
-        if (await this.getUserByEmail(createUserDto.email))
-            throw new HttpException('"email" should not have acount', HttpStatus.FORBIDDEN,);
         return true;
     }
-    async create(createUserDto: {
-        userName: string;
-        password: string;
-        email: string;
-    }): Promise<User> {
-        await this.checkCeateUserData(createUserDto);
-        const salt = await bcrypt.genSalt(10);
-        let hash = await bcrypt.hash(createUserDto.password, salt);
-        createUserDto.password = hash;
-        const createdUser = new this.userModel(createUserDto);
-        return await createdUser.save();
+    async create(createItemDto: {
+        name: string;
+        description?: string;
+        toDoDate: Date;
+        ifDone: boolean;
+    }, userID) {
+        const user = await this.UserService.getUserByID(userID);
+        if (!user)
+            new HttpException('Unauthorized access', HttpStatus.UNAUTHORIZED);
+
+        await this.checkCeateItemData(createItemDto);
+        const createdItem = new this.itemModel(createItemDto);
+        await createdItem.save();
+        await this.UserService.addItemToUser(createdItem._id, userID);
+        return createdItem;
     }
 
 
