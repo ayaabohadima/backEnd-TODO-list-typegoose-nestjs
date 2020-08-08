@@ -1,27 +1,29 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
-import { Item } from "../models/item.schema";
 import { User } from "../models/user.schema";
-import { ReturnModelType } from "@typegoose/typegoose";
-import { InjectModel } from "nestjs-typegoose";
 import * as Joi from '@hapi/joi';
 import * as bcrypt from 'bcrypt';
+import { UserBaseService } from './base-user.service';
+import { ItemBaseService } from '../item/base-item.service';
+
 
 @Injectable()
 export class UserService {
     constructor(
-        @InjectModel(User) private readonly userModel: ReturnModelType<typeof User>,
-        @InjectModel(Item) private readonly itemModel: ReturnModelType<typeof Item>
+        private UserBaseService: UserBaseService,
+        private ItemBaseService: ItemBaseService,
+        //@InjectModel(User) private readonly userModel: ReturnModelType<typeof User>,
+        // @InjectModel(Item) private readonly itemModel: ReturnModelType<typeof Item>
     ) { }
 
     async getUserByID(userID): Promise<User | null> {
-        const user = await this.userModel.findOne({ _id: userID });
+        const user = await this.UserBaseService.findOneById(userID);
         if (!user)
             throw new HttpException('Unauthorized access', HttpStatus.UNAUTHORIZED);
         return user;
     }
 
     async getUserByEmail(email): Promise<User | null> {
-        const user = await this.userModel.findOne({ email: email });
+        const user = await this.UserBaseService.findOneByEmail(email);
         if (!user)
             return null;
         return user;
@@ -54,18 +56,11 @@ export class UserService {
         const salt = await bcrypt.genSalt(10);
         let hash = await bcrypt.hash(createUserDto.password, salt);
         createUserDto.password = hash;
-        const createdUser = new this.userModel(createUserDto);
-        await createdUser.save();
-        return createdUser;
+        return await this.UserBaseService.create(createUserDto);
     }
 
     async findByLogin(loginDto: { email, password }): Promise<any> {
-        const user = await this.userModel
-            .findOne({ email: loginDto.email })
-            .exec()
-            .then(async user => {
-                return user ? user : 0;
-            });
+        const user = await this.UserBaseService.findOneByEmail(loginDto.email);
         if (!user)
             throw new HttpException('not user by this email', HttpStatus.FORBIDDEN);
         if (await bcrypt.compare(loginDto.password, user.password)) return user;
@@ -74,14 +69,14 @@ export class UserService {
     }
 
     async findAll(): Promise<User[] | null> {
-        return await this.userModel.find().exec();
+        return await this.UserBaseService.findAll();
     }
 
     async addItemToUser(itemId, userID) {
         const user = await this.getUserByID(userID);
         let items = user.items;
         items.push(itemId);
-        await this.userModel.updateOne({ _id: userID }, { items: items });
+        await this.UserBaseService.updateItems(userID, items);
         return 1;
     }
 
@@ -101,7 +96,7 @@ export class UserService {
         for (let i = 0; i < user.items.length; i++)
             if (String(user.items[i]) == String(itemID)) {
                 user.items.splice(i, 1);
-                await this.userModel.updateOne({ _id: userID }, { items: user.items });
+                await this.UserBaseService.updateItems(userID, user.items);
                 return true;
             }
         throw new HttpException('can not delete', HttpStatus.FORBIDDEN);
@@ -117,9 +112,9 @@ export class UserService {
         if (!user)
             throw new HttpException('Unauthorized access', HttpStatus.UNAUTHORIZED);
         for (let i = 0; i < user.items.length; i++) {
-            await this.itemModel.findOneAndDelete({ _id: user.items[i] });
+            await this.ItemBaseService.delete(user.items[i]);
         }
-        await this.userModel.findOneAndDelete({ _id: userID });
+        await this.UserBaseService.deleteUser(userID);
     }
 
 }
