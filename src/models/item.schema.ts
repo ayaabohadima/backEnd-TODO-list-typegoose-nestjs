@@ -7,6 +7,8 @@ export class Item {
   description?: string;
   @prop({ required: false })
   toDoDate: Date;
+  @prop({ required: false })
+  endTime: Number;
   @prop({ default: false })
   ifDone: boolean;
 }

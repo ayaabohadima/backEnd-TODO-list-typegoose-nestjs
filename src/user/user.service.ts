@@ -76,6 +76,30 @@ export class UserService {
         await this.userModel.updateOne({ _id: userID }, { items: items });
         return 1;
     }
+    async checkUserHaveItem(userID, itemID): Promise<Boolean> {
+        const user = await this.getUserByID(userID);
+        for (let i = 0; i < user.items.length; i++)
+            if (String(user.items[i]) == String(itemID))
+                return true;
+        return false;
+
+    }
+    async deleteItemFromUser(userID, itemID) {
+        if (!await this.checkUserHaveItem(userID, itemID))
+            throw new HttpException('you do not have this item', HttpStatus.FORBIDDEN);
+        const user = await this.getUserByID(userID);
+        for (let i = 0; i < user.items.length; i++)
+            if (String(user.items[i]) == String(itemID)) {
+                user.items.splice(i, 1);
+                await this.userModel.updateOne({ _id: userID }, { items: user.items });
+                return true;
+            }
+        throw new HttpException('can not delete', HttpStatus.FORBIDDEN);
+    }
+    async getUserItem(userID) {
+        const user = await this.getUserByID(userID);
+        return user.items;
+    }
     // and need handle if no user 
     // delete all user items
     async deleteUser(userID) {

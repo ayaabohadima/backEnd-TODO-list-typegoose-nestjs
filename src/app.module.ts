@@ -6,7 +6,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
-import { ItemService } from './item/item.service';
+import { ItemModule } from './item/item.module';
+
 
 @Module({
   imports: [
@@ -16,9 +17,9 @@ import { ItemService } from './item/item.service';
     }),
     AuthModule,
     UserModule,
-    // CatsModule,
+    ItemModule,
   ],
   controllers: [AppController],
-  providers: [AppService, ItemService],
+  providers: [AppService],
 
 }) export class AppModule { }
