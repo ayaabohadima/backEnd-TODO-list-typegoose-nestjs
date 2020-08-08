@@ -458,13 +458,22 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZjJlZDJlNTA0NDY4NzNiNWNiN2FlOWEiLCJpYXQiOjE1OTY5MDQxNzAsImV4cCI6MjQyOTAwNDUzMDc0NzM5MzYwfQ.xrotQhuXJfJJsK00xpgvcOqT-4QIIykT1ppGnDPMS4Y",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZjJmMTVjZGEwZWM3NDJmZWMwMzUyMGQiLCJpYXQiOjE1OTY5MjEyOTQsImV4cCI6MjQyOTAwNDUzMDc0NzU2NDgwfQ.pxHfD8wWwQ6asbs-4LeSkqBYwr0YS7CFKefT9BJqCpU",
 								"description": " token abearer token to know which user is you",
 								"type": "text"
 							}
 						],
 						"url": {
-							"raw": ""
+							"raw": "http://localhost:3000/me/undo-items",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"me",
+								"undo-items"
+							]
 						},
 						"description": "to get items you do not do in TODO list  "
 					},
@@ -477,13 +486,22 @@
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZjJlZDJlNTA0NDY4NzNiNWNiN2FlOWEiLCJpYXQiOjE1OTY5MDQxNzAsImV4cCI6MjQyOTAwNDUzMDc0NzM5MzYwfQ.xrotQhuXJfJJsK00xpgvcOqT-4QIIykT1ppGnDPMS4Y",
+								"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZjJmMTVjZGEwZWM3NDJmZWMwMzUyMGQiLCJpYXQiOjE1OTY5MjEyOTQsImV4cCI6MjQyOTAwNDUzMDc0NzU2NDgwfQ.pxHfD8wWwQ6asbs-4LeSkqBYwr0YS7CFKefT9BJqCpU",
 								"description": " token abearer token to know which user is you",
 								"type": "text"
 							}
 						],
 						"url": {
-							"raw": ""
+							"raw": "http://localhost:3000/me/done-items",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "3000",
+							"path": [
+								"me",
+								"done-items"
+							]
 						},
 						"description": "to get items you have done in TODO list"
 					},
