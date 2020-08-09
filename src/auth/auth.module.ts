@@ -9,13 +9,13 @@ import { JwtStrategy } from './jwt.strategy';
 import { SharedModule } from '../shared/shared.module';
 import { UserBaseService } from '../user/base-user.service';
 import { ItemBaseService } from '../item/base-item.service';
-
+import { Email } from './send-email.service';
 
 @Module({
   imports: [SharedModule, SharedModule,
     TypegooseModule.forFeature([User]),
     TypegooseModule.forFeature([Item])],
-  providers: [AuthService, JwtStrategy, UserService, UserBaseService, ItemBaseService],
+  providers: [AuthService, JwtStrategy, UserService, Email, UserBaseService, ItemBaseService],
   controllers: [AuthController]
 })
 export class AuthModule { }

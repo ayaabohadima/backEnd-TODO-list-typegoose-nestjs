@@ -4,6 +4,9 @@ import { ItemBaseService } from './base-item.service';
 const ObjectId = require('mongoose').Types.ObjectId;
 import * as Joi from '@hapi/joi';
 import { UserService } from '../user/user.service';
+import { CreateDto } from './dto/create.dto';
+import { UpdateDto } from './dto/update.dto';
+
 @Injectable()
 export class ItemService {
     constructor(
@@ -24,13 +27,7 @@ export class ItemService {
             throw new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
         return this.getItemByID(itemID);
     }
-    async checkCeateItemData(createItemDto: {
-        name: string;
-        description?: string;
-        toDoDate?: Date;
-        ifDone?: boolean;
-        endTime?: Number;
-    }): Promise<Boolean> {
+    async checkCeateItemData(createItemDto: CreateDto): Promise<Boolean> {
         const shcema = Joi.object({
             name: Joi.string().required(),
             description: Joi.string().optional(),
@@ -43,12 +40,7 @@ export class ItemService {
             throw new HttpException(validate.error, HttpStatus.FORBIDDEN);
         return true;
     }
-    async checkUpdateItemData(updateItemDto: {
-        name?: string;
-        description?: string;
-        toDoDate?: Date;
-        endTime?: Number;
-    }): Promise<Boolean> {
+    async checkUpdateItemData(updateItemDto: UpdateDto): Promise<Boolean> {
         const shcema = Joi.object({
             name: Joi.string().optional(),
             description: Joi.string().optional(),
@@ -61,13 +53,7 @@ export class ItemService {
         return true;
     }
 
-    async create(createItemDto: {
-        name: string;
-        description?: string;
-        toDoDate?: Date;
-        ifDone?: boolean;
-        endTime?: Number;
-    }, userID) {
+    async create(createItemDto: CreateDto, userID) {
         const user = await this.UserService.getUserByID(userID);
         if (!user)
             throw new HttpException('Unauthorized access', HttpStatus.UNAUTHORIZED);
@@ -84,12 +70,7 @@ export class ItemService {
         await this.ItemBaseService.update(itemID, { ifDone: item.ifDone ? false : true });
         return item.ifDone ? false : true;
     }
-    async updateItem(userID, itemID, updateItemDto: {
-        name?: string;
-        description?: string;
-        toDoDate?: Date;
-        endTime?: Number;
-    }) {
+    async updateItem(userID, itemID, updateItemDto: UpdateDto) {
         if (!await this.UserService.checkUserHaveItem(userID, itemID))
             throw new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
         const item = await this.getItemByID(itemID);

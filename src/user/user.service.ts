@@ -4,6 +4,8 @@ import * as Joi from '@hapi/joi';
 import * as bcrypt from 'bcrypt';
 import { UserBaseService } from './base-user.service';
 import { ItemBaseService } from '../item/base-item.service';
+import { RegisterDto } from '../auth/dto/register.dto';
+import { LoginDto } from '../auth/dto/login.dto';
 
 
 @Injectable()
@@ -29,11 +31,7 @@ export class UserService {
         return user;
     }
 
-    async checkCeateUserData(createUserDto: {
-        userName: string;
-        password: string;
-        email: string;
-    }): Promise<Boolean> {
+    async checkCeateUserData(createUserDto: RegisterDto): Promise<Boolean> {
         const shcema = Joi.object({
             email: Joi.string().trim().email().required(),
             password: Joi.string().required(),
@@ -47,11 +45,7 @@ export class UserService {
         return true;
     }
 
-    async create(createUserDto: {
-        userName: string;
-        password: string;
-        email: string;
-    }) {
+    async create(createUserDto: RegisterDto) {
         await this.checkCeateUserData(createUserDto);
         const salt = await bcrypt.genSalt(10);
         let hash = await bcrypt.hash(createUserDto.password, salt);
@@ -59,7 +53,7 @@ export class UserService {
         return await this.UserBaseService.create(createUserDto);
     }
 
-    async findByLogin(loginDto: { email, password }): Promise<any> {
+    async findByLogin(loginDto: LoginDto): Promise<any> {
         const user = await this.UserBaseService.findOneByEmail(loginDto.email);
         if (!user)
             throw new HttpException('not user by this email', HttpStatus.FORBIDDEN);

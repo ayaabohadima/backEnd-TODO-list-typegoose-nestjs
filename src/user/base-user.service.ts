@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { User } from "../models/user.schema";
 import { ReturnModelType } from "@typegoose/typegoose";
 import { InjectModel } from "nestjs-typegoose";
+import { RegisterDto } from '../auth/dto/register.dto';
+
 @Injectable()
 export class UserBaseService {
     constructor(
@@ -21,11 +23,7 @@ export class UserBaseService {
         return await this.userModel.find().exec();
     }
 
-    async create(createUserDto: {
-        userName: string;
-        password: string;
-        email: string;
-    }) {
+    async create(createUserDto: RegisterDto) {
         const createdUser = new this.userModel(createUserDto);
         await createdUser.save();
         return createdUser;
