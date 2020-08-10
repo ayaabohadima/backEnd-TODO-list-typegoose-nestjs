@@ -1,5 +1,6 @@
 import { prop } from "@typegoose/typegoose";
-import { IsString, IsOptional, Length, IsNumber } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsString, IsOptional, IsDate, Length, IsNumber } from 'class-validator';
 
 export class Item {
   @Length(2, 30)
@@ -12,6 +13,8 @@ export class Item {
   @IsOptional()
   description?: string;
   @IsOptional()
+  @IsDate()
+  @Type(() => Date)
   @prop({ options: true })
   toDoDate?: Date;
   @IsOptional()

@@ -1,12 +1,8 @@
-import { Injectable } from '@nestjs/common';
 import { User } from "../models/user.schema";
 import { ReturnModelType } from "@typegoose/typegoose";
-import { InjectModel } from "nestjs-typegoose";
 import { RegisterDto } from '../auth/dto/register.dto';
 import { IRead } from '../shared/repository-interfaces/IRead'
 import { IWrite } from '../shared/repository-interfaces/IWrite'
-
-import { from } from 'rxjs';
 
 export abstract class UserRepository implements IWrite<User>, IRead<User>  {
     userModel: ReturnModelType<typeof User>;
@@ -21,7 +17,7 @@ export abstract class UserRepository implements IWrite<User>, IRead<User>  {
         return await this.userModel.find(files).exec();
     }
 
-    async create(createUserDto: User) {
+    async create(createUserDto: RegisterDto) {
         const createdUser = new this.userModel(createUserDto);
         await createdUser.save();
         return createdUser;

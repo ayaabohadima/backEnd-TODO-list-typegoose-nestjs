@@ -1,4 +1,5 @@
-import { Length, IsBoolean, IsOptional, IsDate, IsNumber, IsString } from "class-validator";
+import { Length, IsBoolean, IsDate, IsOptional, IsNumber, IsString } from "class-validator";
+import { Type } from 'class-transformer';
 export class CreateDto {
 
   @IsString()
@@ -8,6 +9,8 @@ export class CreateDto {
   @IsString()
   description?: string;
   @IsOptional()
+  @IsDate()
+  @Type(() => Date)
   toDoDate?: Date;
   @IsOptional()
   @IsBoolean()

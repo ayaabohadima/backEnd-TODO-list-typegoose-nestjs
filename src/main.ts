@@ -7,7 +7,7 @@ const logger = require('morgan');
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ forbidUnknownValues: true }));
   app.use(logger('dev', true));
   app.use(cors());
   await app.listen(process.env.PORT);

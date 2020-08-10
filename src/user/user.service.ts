@@ -32,7 +32,6 @@ export class UserService extends UserRepository {
     }
 
     async createUser(createUserDto: RegisterDto) {
-        // await this.checkCeateUserData(createUserDto);
         if (await this.getUserByEmail(createUserDto.email))
             throw new HttpException('"email" should not have acount', HttpStatus.FORBIDDEN,);
         const salt = await bcrypt.genSalt(10);

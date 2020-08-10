@@ -1,7 +1,8 @@
 import { Controller, UseGuards, Post, Get, Body, Put, Request, Param, Query, Delete } from '@nestjs/common';
 import { ItemService } from './item.service';
 import { AuthGuard } from '@nestjs/passport';
-import { Item } from '../models/item.schema'
+import { UpdateDto } from './dto/update.dto';
+import { CreateDto } from './dto/create.dto';
 
 @Controller()
 export class ItemController {
@@ -9,7 +10,7 @@ export class ItemController {
 
     @UseGuards(AuthGuard('jwt'))
     @Post('item/create')
-    async create(@Body() item: Item, @Request() req) {
+    async create(@Body() item: CreateDto, @Request() req) {
         const createdUser = await this.itemService.createItem(item, req.user._id);
         if (createdUser) return createdUser;
     }
@@ -23,11 +24,7 @@ export class ItemController {
 
     @UseGuards(AuthGuard('jwt'))
     @Put('/item/:item_id/update')
-    async updateName(@Request() req, @Param() params, @Body() item: {
-        name?: string;
-        description?: string;
-        toDoDate?: Date;
-    }) {
+    async updateName(@Request() req, @Param() params, @Body() item: UpdateDto) {
         await this.itemService.updateItem(req.user._id, params.item_id, item);
     }
 
