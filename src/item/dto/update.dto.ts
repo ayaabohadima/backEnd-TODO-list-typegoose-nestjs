@@ -1,11 +1,11 @@
-import { IsString, IsDateString, IsBoolean, Length, IsNumber } from 'class-validator';
+import { Length, IsBoolean, IsDateString, IsDate, IsNumber, IsString } from "class-validator";
 export class UpdateDto {
   @IsString()
-  @Length(4, 30)
+  @Length(2, 20)
   name?: string;
   @IsString()
   description?: string;
-  @IsDateString()
+  @IsDate()
   toDoDate?: Date;
   @IsNumber()
   endTime?: Number;

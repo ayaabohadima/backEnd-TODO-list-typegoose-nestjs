@@ -2,6 +2,7 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { Item } from "../models/item.schema";
 import { ItemBaseService } from './base-item.service';
 const ObjectId = require('mongoose').Types.ObjectId;
+//import * as Joi from '@hapi/joi';
 import { UserService } from '../user/user.service';
 import { CreateDto } from './dto/create.dto';
 import { UpdateDto } from './dto/update.dto';
@@ -26,11 +27,40 @@ export class ItemService {
             throw new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
         return this.getItemByID(itemID);
     }
-
+    /*async checkCeateItemData(createItemDto: CreateDto): Promise<Boolean> {
+        const shcema = Joi.object({
+            name: Joi.string().required(),
+            description: Joi.string().optional(),
+            ifDone: Joi.boolean().optional(),
+            toDoDate: Joi.date().raw().optional(),
+            endTime: Joi.number().optional()
+        });
+        const validate = shcema.validate(createItemDto);
+        if (validate.error)
+            throw new HttpException(validate.error, HttpStatus.FORBIDDEN);
+        return true;
+    }
+    */
+    /*
+     async checkUpdateItemData(updateItemDto: UpdateDto): Promise<Boolean> {
+         const shcema = Joi.object({
+             name: Joi.string().optional(),
+             description: Joi.string().optional(),
+             toDoDate: Joi.date().raw().optional(),
+             endTime: Joi.number().optional()
+         });
+         const validate = shcema.validate(updateItemDto);
+         if (validate.error)
+             throw new HttpException(validate.error, HttpStatus.FORBIDDEN);
+         return true;
+     }
+ */
     async create(createItemDto: CreateDto, userID) {
         const user = await this.UserService.getUserByID(userID);
         if (!user)
             throw new HttpException('Unauthorized access', HttpStatus.UNAUTHORIZED);
+
+        //     await this.checkCeateItemData(createItemDto);
         const createdItem = await this.ItemBaseService.create(createItemDto);
         await this.UserService.addItemToUser(createdItem._id, userID);
         return createdItem;
@@ -46,6 +76,7 @@ export class ItemService {
         if (!await this.UserService.checkUserHaveItem(userID, itemID))
             throw new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
         const item = await this.getItemByID(itemID);
+        //await this.checkUpdateItemData(updateItemDto);
         if (updateItemDto.description)
             await this.ItemBaseService.update(itemID, { description: updateItemDto.description });
         if (updateItemDto.name)

@@ -1,11 +1,11 @@
-import { IsString, IsDateString, IsBoolean, Length, IsNumber } from 'class-validator';
+import { Length, IsBoolean, IsDateString, IsDate, IsNumber, IsString } from "class-validator";
 export class CreateDto {
-  @Length(2, 30)
   @IsString()
+  @Length(2, 20)
   name: string;
   @IsString()
   description?: string;
-  @IsDateString()
+  @IsDate()
   toDoDate?: Date;
   @IsBoolean()
   ifDone?: Boolean;

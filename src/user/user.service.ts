@@ -28,15 +28,16 @@ export class UserService extends UserRepository {
 
     async getUserByEmail(email): Promise<User | null> {
         const user = await this.findOne({ email: email });
+        console.log(user);
         if (!user)
             return null;
         return user;
     }
 
-    async createUser(createUserDto: RegisterDto) {
+    async create(createUserDto: RegisterDto) {
+        // await this.checkCeateUserData(createUserDto);
         if (await this.getUserByEmail(createUserDto.email))
             throw new HttpException('"email" should not have acount', HttpStatus.FORBIDDEN,);
-
         const salt = await bcrypt.genSalt(10);
         let hash = await bcrypt.hash(createUserDto.password, salt);
         createUserDto.password = hash;
