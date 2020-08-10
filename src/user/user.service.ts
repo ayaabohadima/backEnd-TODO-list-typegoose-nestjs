@@ -3,7 +3,6 @@ import { User } from "../models/user.schema";
 import * as bcrypt from 'bcrypt';
 import { UserRepository } from './userRepository.service';
 import { InjectModel } from "nestjs-typegoose";
-import { ItemBaseService } from '../item/base-item.service';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { LoginDto } from '../auth/dto/login.dto';
 import { ReturnModelType } from "@typegoose/typegoose";
@@ -12,8 +11,7 @@ import { ReturnModelType } from "@typegoose/typegoose";
 @Injectable()
 export class UserService extends UserRepository {
     constructor(
-        @InjectModel(User) private readonly _userModel: ReturnModelType<typeof User>,
-        private readonly ItemBaseService: ItemBaseService
+        @InjectModel(User) private readonly _userModel: ReturnModelType<typeof User>
     ) {
         super();
         this.userModel = _userModel;
@@ -28,13 +26,12 @@ export class UserService extends UserRepository {
 
     async getUserByEmail(email): Promise<User | null> {
         const user = await this.findOne({ email: email });
-        console.log(user);
         if (!user)
             return null;
         return user;
     }
 
-    async create(createUserDto: RegisterDto) {
+    async createUser(createUserDto: RegisterDto) {
         // await this.checkCeateUserData(createUserDto);
         if (await this.getUserByEmail(createUserDto.email))
             throw new HttpException('"email" should not have acount', HttpStatus.FORBIDDEN,);
@@ -96,9 +93,6 @@ export class UserService extends UserRepository {
         const user = await this.getUserByID(userID);
         if (!user)
             throw new HttpException('Unauthorized access', HttpStatus.UNAUTHORIZED);
-        for (let i = 0; i < user.items.length; i++) {
-            await this.ItemBaseService.delete(user.items[i]);
-        }
         await this.delete(userID);
     }
 

@@ -6,17 +6,18 @@ import { AuthGuard } from '@nestjs/passport';
 import { Email } from './send-email.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-
+import { ItemService } from '../item/item.service';
 
 @Controller()
 export class AuthController {
     constructor(private readonly userService: UserService,
+        private readonly itemService: ItemService,
         private readonly email: Email,
         private readonly authService: AuthService) { }
 
     @Post('/sign-up')
     async create(@Body() user: RegisterDto) {
-        const createdUser = await this.userService.create(user);
+        const createdUser = await this.userService.createUser(user);
         if (!createdUser) throw new Error('user not found');
         this.email.sendEmail(createdUser.email, "", 'confirm', createdUser.userName);
         const token = await this.authService.signPayload({ _id: createdUser._id });
@@ -36,6 +37,7 @@ export class AuthController {
     @Delete('/me/delete')
     async delete(@Request() req) {
         const user = await this.userService.getUserByID(req.user._id);
+        await this.itemService.deleteAllUserItems(req.user._id);
         await this.userService.deleteUser(req.user._id);
         this.email.sendEmail(user.email, "", "Delete account", user.userName);
         return;

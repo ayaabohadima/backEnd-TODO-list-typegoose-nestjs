@@ -10,7 +10,7 @@ export class ItemController {
     @UseGuards(AuthGuard('jwt'))
     @Post('item/create')
     async create(@Body() item: Item, @Request() req) {
-        const createdUser = await this.itemService.create(item, req.user._id);
+        const createdUser = await this.itemService.createItem(item, req.user._id);
         if (createdUser) return createdUser;
     }
 

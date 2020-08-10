@@ -1,21 +1,28 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { Item } from "../models/item.schema";
-import { ItemBaseService } from './base-item.service';
+import { ItemRepository } from './item-repository.service';
 const ObjectId = require('mongoose').Types.ObjectId;
-//import * as Joi from '@hapi/joi';
 import { UserService } from '../user/user.service';
 import { CreateDto } from './dto/create.dto';
 import { UpdateDto } from './dto/update.dto';
+import { ReturnModelType } from "@typegoose/typegoose";
+import { InjectModel } from "nestjs-typegoose";
 
 @Injectable()
-export class ItemService {
+export class ItemService extends ItemRepository {
+
     constructor(
+        @InjectModel(Item) private readonly _itemModel: ReturnModelType<typeof Item>,
         private UserService: UserService,
-        private ItemBaseService: ItemBaseService,
-    ) { }
+    ) {
+        super();
+        this.itemModel = _itemModel;
+
+    }
+
     async getItemByID(id): Promise<Item | null> {
         if (!ObjectId.isValid(id)) throw new HttpException('not valid object id', HttpStatus.FORBIDDEN);
-        const item = await this.ItemBaseService.findOneById(id);
+        const item = await this.findOne({ _id: id });
         if (!item) {
             throw new HttpException('no item ', HttpStatus.FORBIDDEN);
         }
@@ -27,41 +34,11 @@ export class ItemService {
             throw new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
         return this.getItemByID(itemID);
     }
-    /*async checkCeateItemData(createItemDto: CreateDto): Promise<Boolean> {
-        const shcema = Joi.object({
-            name: Joi.string().required(),
-            description: Joi.string().optional(),
-            ifDone: Joi.boolean().optional(),
-            toDoDate: Joi.date().raw().optional(),
-            endTime: Joi.number().optional()
-        });
-        const validate = shcema.validate(createItemDto);
-        if (validate.error)
-            throw new HttpException(validate.error, HttpStatus.FORBIDDEN);
-        return true;
-    }
-    */
-    /*
-     async checkUpdateItemData(updateItemDto: UpdateDto): Promise<Boolean> {
-         const shcema = Joi.object({
-             name: Joi.string().optional(),
-             description: Joi.string().optional(),
-             toDoDate: Joi.date().raw().optional(),
-             endTime: Joi.number().optional()
-         });
-         const validate = shcema.validate(updateItemDto);
-         if (validate.error)
-             throw new HttpException(validate.error, HttpStatus.FORBIDDEN);
-         return true;
-     }
- */
-    async create(createItemDto: CreateDto, userID) {
+    async createItem(createItemDto: CreateDto, userID) {
         const user = await this.UserService.getUserByID(userID);
         if (!user)
             throw new HttpException('Unauthorized access', HttpStatus.UNAUTHORIZED);
-
-        //     await this.checkCeateItemData(createItemDto);
-        const createdItem = await this.ItemBaseService.create(createItemDto);
+        const createdItem = await this.create(createItemDto);
         await this.UserService.addItemToUser(createdItem._id, userID);
         return createdItem;
     }
@@ -69,7 +46,7 @@ export class ItemService {
         if (!await this.UserService.checkUserHaveItem(userID, itemID))
             throw new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
         const item = await this.getItemByID(itemID);
-        await this.ItemBaseService.update(itemID, { ifDone: item.ifDone ? false : true });
+        await this.update(itemID, { ifDone: item.ifDone ? false : true });
         return item.ifDone ? false : true;
     }
     async updateItem(userID, itemID, updateItemDto: UpdateDto) {
@@ -78,13 +55,13 @@ export class ItemService {
         const item = await this.getItemByID(itemID);
         //await this.checkUpdateItemData(updateItemDto);
         if (updateItemDto.description)
-            await this.ItemBaseService.update(itemID, { description: updateItemDto.description });
+            await this.update(itemID, { description: updateItemDto.description });
         if (updateItemDto.name)
-            await this.ItemBaseService.update(itemID, { name: updateItemDto.name });
+            await this.update(itemID, { name: updateItemDto.name });
         if (updateItemDto.toDoDate)
-            await this.ItemBaseService.update(itemID, { toDoDate: updateItemDto.toDoDate });
+            await this.update(itemID, { toDoDate: updateItemDto.toDoDate });
         if (updateItemDto.endTime)
-            await this.ItemBaseService.update(itemID, { endTime: updateItemDto.endTime });
+            await this.update(itemID, { endTime: updateItemDto.endTime });
 
     }
 
@@ -149,10 +126,17 @@ export class ItemService {
         if (!await this.UserService.checkUserHaveItem(userID, itemID))
             throw new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
         if (await this.UserService.deleteItemFromUser(userID, itemID))
-            if (await this.ItemBaseService.delete(itemID))
+            if (await this.delete(itemID))
                 return true;
             else throw new HttpException('this item not exist ', HttpStatus.UNAUTHORIZED);
 
+    }
+
+    async deleteAllUserItems(userID) {
+        const itemsIDs = await this.UserService.getUserItem(userID);
+        for (let i = 0; i < itemsIDs.length; i++) {
+            await this.delete(itemsIDs[i]);
+        }
     }
 
 }
