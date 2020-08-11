@@ -9,36 +9,31 @@ import { ReturnModelType } from "@typegoose/typegoose";
 import { InjectModel } from "nestjs-typegoose";
 
 @Injectable()
-export class ItemService extends ItemRepository {
+export class ItemService {
 
     constructor(
-        @InjectModel(Item) private readonly _itemModel: ReturnModelType<typeof Item>,
-        private UserService: UserService,
-    ) {
-        super();
-        this.itemModel = _itemModel;
-
-    }
+        private readonly itemRepository: ItemRepository,
+        private readonly UserService: UserService
+    ) { }
 
     async getItemByID(id): Promise<Item | null> {
-        if (!ObjectId.isValid(id)) throw new HttpException('not valid object id', HttpStatus.FORBIDDEN);
-        const item = await this.findOne({ _id: id });
+        const item = await this.itemRepository.findByID(id);
         if (!item) {
-            throw new HttpException('no item ', HttpStatus.FORBIDDEN);
+            throw new HttpException('No item', HttpStatus.FORBIDDEN);
         }
         return item;
     }
 
-    async getUserItem(userID, itemID) {
+    async getUserItem(userID, itemID): Promise<Item> {
         if (!await this.UserService.checkUserHaveItem(userID, itemID))
             throw new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
-        return this.getItemByID(itemID);
+        return await this.getItemByID(itemID);
     }
-    async createItem(createItemDto: CreateDto, userID) {
+    async createItem(createItemDto: CreateDto, userID): Promise<Item> {
         const user = await this.UserService.getUserByID(userID);
         if (!user)
             throw new HttpException('Unauthorized access', HttpStatus.UNAUTHORIZED);
-        const createdItem = await this.create(createItemDto);
+        const createdItem = await this.itemRepository.create(createItemDto);
         await this.UserService.addItemToUser(createdItem._id, userID);
         return createdItem;
     }
@@ -46,23 +41,13 @@ export class ItemService extends ItemRepository {
         if (!await this.UserService.checkUserHaveItem(userID, itemID))
             throw new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
         const item = await this.getItemByID(itemID);
-        await this.update(itemID, { ifDone: item.ifDone ? false : true });
-        return item.ifDone ? false : true;
+        return await this.itemRepository.toggleISDone(itemID);
     }
     async updateItem(userID, itemID, updateItemDto: UpdateDto) {
         if (!await this.UserService.checkUserHaveItem(userID, itemID))
             throw new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
         const item = await this.getItemByID(itemID);
-        //await this.checkUpdateItemData(updateItemDto);
-        if (updateItemDto.description)
-            await this.update(itemID, { description: updateItemDto.description });
-        if (updateItemDto.name)
-            await this.update(itemID, { name: updateItemDto.name });
-        if (updateItemDto.toDoDate)
-            await this.update(itemID, { toDoDate: updateItemDto.toDoDate });
-        if (updateItemDto.endTime)
-            await this.update(itemID, { endTime: updateItemDto.endTime });
-
+        return await this.itemRepository.update(itemID, updateItemDto);
     }
 
     async getUserAllItems(userId) {
@@ -90,6 +75,7 @@ export class ItemService extends ItemRepository {
         var items = [];
         for (let i = 0; i < itemsIDs.length; i++) {
             const item = await this.getItemByID(itemsIDs[i]);
+            console.log(item.ifDone);
             if (item.ifDone)
                 items.push(item);
         }
@@ -100,7 +86,6 @@ export class ItemService extends ItemRepository {
         const itemsIDs = await this.UserService.getUserItem(userId);
         var items = [];
         const today = new Date();
-        // const dateNow = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
         for (let i = 0; i < itemsIDs.length; i++) {
             var item = await this.getItemByID(itemsIDs[i]);
             if (!item.toDoDate || item.toDoDate == today)
@@ -126,7 +111,7 @@ export class ItemService extends ItemRepository {
         if (!await this.UserService.checkUserHaveItem(userID, itemID))
             throw new HttpException('you do not have this item ', HttpStatus.UNAUTHORIZED);
         if (await this.UserService.deleteItemFromUser(userID, itemID))
-            if (await this.delete(itemID))
+            if (await this.itemRepository.delete(itemID))
                 return true;
             else throw new HttpException('this item not exist ', HttpStatus.UNAUTHORIZED);
 
@@ -135,7 +120,7 @@ export class ItemService extends ItemRepository {
     async deleteAllUserItems(userID) {
         const itemsIDs = await this.UserService.getUserItem(userID);
         for (let i = 0; i < itemsIDs.length; i++) {
-            await this.delete(itemsIDs[i]);
+            await this.itemRepository.delete(itemsIDs[i]);
         }
     }
 

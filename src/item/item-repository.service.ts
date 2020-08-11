@@ -1,41 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { ReturnModelType } from "@typegoose/typegoose";
 import { Item } from "../models/item.schema";
+import { BaseRepository } from '../shared/repository/base.service';
+import { ModelType } from 'typegoose';
+import { InjectModel } from "nestjs-typegoose";
 
-import { IRead } from '../shared/repository-interfaces/IRead'
-import { IWrite } from '../shared/repository-interfaces/IWrite'
-import { UpdateDto } from './dto/update.dto';
-import { CreateDto } from './dto/create.dto';
-
-export abstract class ItemRepository implements IWrite<Item>, IRead<Item>  {
-    itemModel: ReturnModelType<typeof Item>;
-    async findOne(files: {}) {
-        return await this.itemModel.findOne(files);
-    }
-    async findAll() {
-        return await this.itemModel.find().exec();
+@Injectable()
+export class ItemRepository extends BaseRepository<Item>  {
+    constructor(
+        @InjectModel(Item) private readonly _itemModel: ModelType<Item>
+    ) {
+        super();
+        this._Model = _itemModel;
     }
 
-    async find(files: {}) {
-        return await this.itemModel.find(files).exec();
-    }
-
-    async create(createItem: CreateDto) {
-        const createdItem = new this.itemModel(createItem);
-        await createdItem.save();
-        return createdItem;
-    }
-
-    async update(id, updateInfo: UpdateDto) {
-        if (await this.itemModel.updateOne({ _id: id }, updateInfo))
-            return true;
-        return false;
-    }
-
-    async delete(id) {
-        if (await this.itemModel.findOneAndDelete({ _id: id }))
-            return true;
-        return false;
+    async toggleISDone(itemID) {
+        const item = await this.findByID(itemID);
+        await this.update(itemID, { ifDone: item.ifDone ? false : true });
+        return item.ifDone ? false : true;
     }
 
 }

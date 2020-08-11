@@ -9,12 +9,22 @@ import { JwtStrategy } from './jwt.strategy';
 import { SharedModule } from '../shared/shared.module';
 import { Email } from './send-email.service';
 import { ItemService } from 'src/item/item.service';
-
+import { UserRepository } from '../user/user-repository.service';
+import { ItemRepository } from '../item/item-repository.service';
 @Module({
   imports: [SharedModule, SharedModule,
     TypegooseModule.forFeature([User]),
-    TypegooseModule.forFeature([Item])],
-  providers: [AuthService, JwtStrategy, UserService, Email, ItemService],
+    TypegooseModule.forFeature([Item])
+  ],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    UserService,
+    Email,
+    ItemService,
+    UserRepository,
+    ItemRepository
+  ],
   controllers: [AuthController]
 })
 export class AuthModule { }

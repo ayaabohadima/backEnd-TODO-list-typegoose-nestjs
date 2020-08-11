@@ -19,7 +19,7 @@ export class UserController {
 
     @Get('users')
     async all(): Promise<User[] | null> {
-        return await this.userService.findAll();
+        return await this.userService.findAllUsers();
     }
 
 }
