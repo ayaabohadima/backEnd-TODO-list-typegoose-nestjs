@@ -8,7 +8,11 @@ import { UserRepository } from '../user/user-repository.service';
 @Module({
     imports: [
         TypegooseModule.forFeature([Item]),
-        TypegooseModule.forFeature([User]),],
-    providers: [UserService, UserRepository]
+        TypegooseModule.forFeature([User]),
+    ],
+    providers: [
+        UserService,
+        UserRepository
+    ]
 })
 export class SharedModule { }

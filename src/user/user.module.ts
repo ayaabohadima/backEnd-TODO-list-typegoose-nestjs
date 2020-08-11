@@ -10,7 +10,10 @@ import { Item } from "../models/item.schema";
   imports: [SharedModule, SharedModule,
     TypegooseModule.forFeature([User]),
     TypegooseModule.forFeature([Item])],
-  providers: [UserService, UserRepository],
+  providers: [
+    UserService,
+    UserRepository
+  ],
   controllers: [UserController]
 })
 export class UserModule { }

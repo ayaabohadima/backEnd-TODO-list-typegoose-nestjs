@@ -1,11 +1,9 @@
 import { User } from "../models/user.schema";
-import { ReturnModelType } from "@typegoose/typegoose";
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { ModelType } from 'typegoose';
 import { InjectModel } from "nestjs-typegoose";
 import { BaseRepository } from "../shared/repository/base.service";
-import { promises } from "dns";
 const ObjectId = require('mongoose').Types.ObjectId;
 
 @Injectable()

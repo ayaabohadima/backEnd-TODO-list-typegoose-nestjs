@@ -5,8 +5,6 @@ const ObjectId = require('mongoose').Types.ObjectId;
 import { UserService } from '../user/user.service';
 import { CreateDto } from './dto/create.dto';
 import { UpdateDto } from './dto/update.dto';
-import { ReturnModelType } from "@typegoose/typegoose";
-import { InjectModel } from "nestjs-typegoose";
 
 @Injectable()
 export class ItemService {
